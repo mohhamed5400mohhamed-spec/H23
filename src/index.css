@@ -1,0 +1,501 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --app-height: 100dvh;
+  --theme-app-bg: #070b13;
+  --theme-header-bg: #1e1711;
+  --theme-header-border: #3b2c21;
+  --theme-card-bg: #ffffff;
+  --theme-card-border: #e2e8f0;
+  --theme-input-bg: #ffffff;
+  --theme-input-border: #cbd5e1;
+  --theme-primary-btn: #d97706;
+  --theme-accent: #f59e0b;
+  --theme-bubble-bg: #ffffff;
+  --theme-bubble-border: #e2e8f0;
+  --theme-bubble-text: #0f172a;
+}
+
+html.dark,
+[data-theme-mode="night"] {
+  color-scheme: dark;
+  --theme-app-bg: #070b13;
+  --theme-header-bg: #111726;
+  --theme-header-border: #1e293b;
+  --theme-card-bg: #111726;
+  --theme-card-border: #1e293b;
+  --theme-input-bg: #162035;
+  --theme-input-border: #334155;
+  --theme-bubble-bg: #161f32;
+  --theme-bubble-border: #334155;
+  --theme-bubble-text: #f8fafc;
+}
+
+/* Custom Theme Runtime CSS Variable Classes */
+.ct-app-bg { background-color: var(--ct-app-bg, #0f172a) !important; }
+.ct-app-text { color: var(--ct-app-text, #f8fafc) !important; }
+.ct-chat-bg { background-color: var(--ct-chat-bg, #f8fafc) !important; }
+.ct-header-bg { background: var(--ct-header-bg, #1e293b) !important; }
+.ct-header-text { color: var(--ct-header-text, #fbbf24) !important; }
+.ct-header-border { border-color: var(--ct-header-border, #334155) !important; }
+.ct-subheader-bg { background-color: var(--ct-subheader-bg, #0f172a) !important; }
+.ct-subheader-text { color: var(--ct-subheader-text, #e2e8f0) !important; }
+.ct-bottom-bg { background-color: var(--ct-bottom-bg, #1e293b) !important; }
+.ct-bottom-text { color: var(--ct-bottom-text, #f8fafc) !important; }
+.ct-input-bg { background-color: var(--ct-input-bg, #1e293b) !important; }
+.ct-field-bg { background-color: var(--ct-field-bg, #ffffff) !important; }
+.ct-field-text { color: var(--ct-field-text, #000000) !important; }
+.ct-field-border { border-color: var(--ct-field-border, #cbd5e1) !important; }
+.ct-bubble { background-color: var(--ct-bubble-bg, #ffffff) !important; border-color: var(--ct-bubble-border, #e2e8f0) !important; }
+.ct-accent-text { color: var(--ct-accent-text, #f59e0b) !important; }
+.ct-primary-btn { background: var(--ct-btn-bg, #d97706) !important; color: var(--ct-btn-text, #000000) !important; }
+.ct-drawer-bg { background-color: var(--ct-drawer-bg, #0f172a) !important; }
+.ct-card-bg { background-color: var(--ct-card-bg, #1e293b) !important; }
+.ct-card-border { border-color: var(--ct-card-border, #334155) !important; }
+
+/* Scoped Chat Font Weight / Boldness Control */
+[data-chat-font-weight="thin"] .chat-message-row,
+[data-chat-font-weight="thin"] .chat-message-row *,
+[data-chat-font-weight="thin"] .chat-message-text,
+[data-chat-font-weight="thin"] .pm-message-text {
+  font-weight: 400 !important;
+}
+[data-chat-font-weight="thin"] .chat-message-row .font-bold,
+[data-chat-font-weight="thin"] .chat-message-row .font-extrabold,
+[data-chat-font-weight="thin"] .chat-message-row .font-black,
+[data-chat-font-weight="thin"] .chat-message-row b,
+[data-chat-font-weight="thin"] .chat-message-row strong,
+[data-chat-font-weight="thin"] .chat-message-text.font-bold,
+[data-chat-font-weight="thin"] .chat-message-text.font-extrabold,
+[data-chat-font-weight="thin"] .chat-message-text.font-black,
+[data-chat-font-weight="thin"] .pm-message-text.font-bold,
+[data-chat-font-weight="thin"] .pm-message-text.font-extrabold,
+[data-chat-font-weight="thin"] .pm-message-text.font-black {
+  font-weight: 500 !important;
+}
+
+[data-chat-font-weight="normal"] .chat-message-row,
+[data-chat-font-weight="normal"] .chat-message-row *,
+[data-chat-font-weight="normal"] .chat-message-text,
+[data-chat-font-weight="normal"] .pm-message-text {
+  font-weight: 500 !important;
+}
+[data-chat-font-weight="normal"] .chat-message-row .font-bold,
+[data-chat-font-weight="normal"] .chat-message-row .font-extrabold,
+[data-chat-font-weight="normal"] .chat-message-row .font-black,
+[data-chat-font-weight="normal"] .chat-message-row b,
+[data-chat-font-weight="normal"] .chat-message-row strong,
+[data-chat-font-weight="normal"] .chat-message-text.font-bold,
+[data-chat-font-weight="normal"] .chat-message-text.font-extrabold,
+[data-chat-font-weight="normal"] .chat-message-text.font-black,
+[data-chat-font-weight="normal"] .pm-message-text.font-bold,
+[data-chat-font-weight="normal"] .pm-message-text.font-extrabold,
+[data-chat-font-weight="normal"] .pm-message-text.font-black {
+  font-weight: 600 !important;
+}
+
+[data-chat-font-weight="bold"] .chat-message-row,
+[data-chat-font-weight="bold"] .chat-message-row *,
+[data-chat-font-weight="bold"] .chat-message-text,
+[data-chat-font-weight="bold"] .pm-message-text {
+  font-weight: 700 !important;
+}
+[data-chat-font-weight="bold"] .chat-message-row .font-extrabold,
+[data-chat-font-weight="bold"] .chat-message-row .font-black,
+[data-chat-font-weight="bold"] .chat-message-row b,
+[data-chat-font-weight="bold"] .chat-message-row strong,
+[data-chat-font-weight="bold"] .chat-message-text.font-extrabold,
+[data-chat-font-weight="bold"] .chat-message-text.font-black,
+[data-chat-font-weight="bold"] .pm-message-text.font-extrabold,
+[data-chat-font-weight="bold"] .pm-message-text.font-black {
+  font-weight: 800 !important;
+}
+
+[data-chat-font-weight="black"] .chat-message-row,
+[data-chat-font-weight="black"] .chat-message-row *,
+[data-chat-font-weight="black"] .chat-message-text,
+[data-chat-font-weight="black"] .pm-message-text {
+  font-weight: 800 !important;
+}
+[data-chat-font-weight="black"] .chat-message-row .font-extrabold,
+[data-chat-font-weight="black"] .chat-message-row .font-black,
+[data-chat-font-weight="black"] .chat-message-row b,
+[data-chat-font-weight="black"] .chat-message-row strong,
+[data-chat-font-weight="black"] .chat-message-text.font-extrabold,
+[data-chat-font-weight="black"] .chat-message-text.font-black,
+[data-chat-font-weight="black"] .pm-message-text.font-extrabold,
+[data-chat-font-weight="black"] .pm-message-text.font-black {
+  font-weight: 900 !important;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  height: var(--app-height, 100dvh);
+  max-height: var(--app-height, 100dvh);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overflow-x: hidden !important;
+  background-color: var(--theme-app-bg, #070b13);
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+button,
+[role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body.app-booting {
+  opacity: 0.96;
+  transition: opacity 0.25s ease-in-out;
+}
+
+#root {
+  width: 100%;
+  max-width: 100vw;
+  height: 100%;
+  height: var(--app-height, 100dvh);
+  max-height: var(--app-height, 100dvh);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overflow-x: hidden !important;
+  position: relative;
+}
+
+/* Ensure smooth touch scrolling on mobile and embedded apps */
+.modal-scroll-container {
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  pointer-events: auto !important;
+}
+
+/* Prevent horizontal overflow across entire chat and message containers */
+.no-horizontal-overflow {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.chat-message-row {
+  position: relative !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.msg-action-btn {
+  position: relative;
+  z-index: 20;
+}
+
+.msg-action-panel {
+  position: absolute !important;
+  z-index: 999 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Golden Shimmer Animation for Engagement Stars (GPU composited) */
+@keyframes goldShimmer {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.07);
+  }
+}
+
+.gold-star-glow {
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.7));
+  animation: goldShimmer 2.5s ease-in-out infinite;
+}
+
+/* Story Gradient Active Ring Animation (GPU composited) */
+@keyframes storyRingPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 1;
+  }
+}
+
+.story-active-ring {
+  box-shadow: 0 0 0 2.5px rgba(245, 158, 11, 0.9), 0 0 10px 1px rgba(244, 63, 94, 0.6);
+  animation: storyRingPulse 2.8s ease-in-out infinite;
+}
+
+/* Full UI Theme Bubble Skins */
+.bubble-skin-modern {
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+.bubble-skin-classic {
+  border-radius: 0.5rem;
+  border-width: 1.5px;
+}
+
+.bubble-skin-glass {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 3px 8px -1px rgba(0, 0, 0, 0.08);
+}
+
+.bubble-skin-neon {
+  border-radius: 0.875rem;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.25);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+.bubble-skin-gold {
+  border-radius: 1rem;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.98) 0%, rgba(254, 243, 199, 0.85) 100%);
+  box-shadow: 0 2px 8px -2px rgba(217, 119, 6, 0.25);
+}
+
+.bubble-skin-transparent {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+@layer base {
+  body {
+    font-family: 'Cairo', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+/* Subtle Pink Highlight for @Mentions (إضاءة وردية ناعمة للإشارات بدون إعادة رسم الإطار في كل فريم) */
+@keyframes mentionPulsePink {
+  0%, 100% {
+    opacity: 0.94;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.mention-pink-flash {
+  background-color: rgba(255, 232, 236, 0.92);
+  box-shadow: 0 2px 8px -1px rgba(244, 63, 94, 0.22);
+  border-color: rgba(244, 63, 94, 0.78);
+  animation: mentionPulsePink 2.4s ease-in-out infinite;
+}
+
+/* Eye comfort warm amber filter */
+.eye-comfort-filter {
+  filter: sepia(0.2) hue-rotate(-15deg) contrast(0.95);
+}
+
+/* Floating Live Reactions Animation (تطاير تفاعلات اللايف للأعلى بنعومة) */
+@keyframes floatUpAnimation {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(-20px) scale(1.15);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(-160px) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-230px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.animate-float-up {
+  animation: floatUpAnimation 2.2s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+/* Subtle Typing Indicator Animated Bubble & Dots (مؤشر الكتابة التفاعلي) */
+@keyframes typingBubbleFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes typingDotBounce {
+  0%, 80%, 100% {
+    transform: scale(0.65);
+    opacity: 0.35;
+  }
+  40% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+}
+
+.animate-typing-bubble {
+  box-shadow: 0 2px 10px -1px rgba(245, 158, 11, 0.25);
+  border-color: rgba(245, 158, 11, 0.55);
+  animation: typingBubbleFloat 2.6s ease-in-out infinite;
+}
+
+.typing-dot-1 {
+  animation: typingDotBounce 1.3s infinite ease-in-out both;
+  animation-delay: -0.32s;
+}
+.typing-dot-2 {
+  animation: typingDotBounce 1.3s infinite ease-in-out both;
+  animation-delay: -0.16s;
+}
+.typing-dot-3 {
+  animation: typingDotBounce 1.3s infinite ease-in-out both;
+  animation-delay: 0s;
+}
+
+/* Compact Tools Dropdown Scrollbar & Touch Behavior */
+.compact-tools-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.7) rgba(15, 23, 42, 0.5);
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
+}
+
+.compact-tools-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.compact-tools-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 9999px;
+}
+
+.compact-tools-scroll::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.7);
+  border-radius: 9999px;
+}
+
+/* Luxury Animated Avatar Frames (إطارات الصور الشخصية المتحركة والمتلألئة) */
+@keyframes frameSpinConic {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes frameShimmerPulse {
+  0%, 100% { opacity: 0.75; transform: scale(0.99); }
+  50% { opacity: 1; transform: scale(1.015); }
+}
+
+@keyframes frameSparkleTwinkle {
+  0%, 100% { transform: scale(0.65) rotate(0deg); opacity: 0.35; }
+  50% { transform: scale(1.25) rotate(25deg); opacity: 1; }
+}
+
+.avatar-frame-spin {
+  animation: frameSpinConic 4.2s linear infinite;
+}
+
+.avatar-frame-spin-fast {
+  animation: frameSpinConic 2.6s linear infinite;
+}
+
+@keyframes frameSpinReverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.avatar-frame-spin-reverse {
+  animation: frameSpinReverse 7.5s linear infinite;
+  transform-origin: center;
+}
+
+.avatar-frame-spin-slow {
+  animation: frameSpinConic 9s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes frameWingPulse {
+  0%, 100% { transform: scale(0.985); opacity: 0.92; }
+  50% { transform: scale(1.03); opacity: 1; }
+}
+
+.avatar-frame-wing-pulse {
+  animation: frameWingPulse 2.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes frameFloatBob {
+  0%, 100% { transform: translateY(0px) scale(1); opacity: 0.9; }
+  50% { transform: translateY(-2.4px) scale(1.05); opacity: 1; }
+}
+
+.avatar-frame-float {
+  animation: frameFloatBob 2.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes frameFlameFlicker {
+  0%, 100% { transform: scale(0.98) rotate(0deg); opacity: 0.9; }
+  33% { transform: scale(1.035) rotate(2deg); opacity: 1; }
+  66% { transform: scale(1.01) rotate(-2deg); opacity: 0.95; }
+}
+
+.avatar-frame-flame {
+  animation: frameFlameFlicker 1.6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes frameButterflyFlutter {
+  0%, 100% { transform: scaleX(1) translateY(0px); }
+  50% { transform: scaleX(0.76) translateY(-1.8px); }
+}
+
+.avatar-frame-flutter {
+  animation: frameButterflyFlutter 1.1s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.avatar-frame-glitter {
+  animation: frameShimmerPulse 2.2s ease-in-out infinite;
+}
+
+.avatar-frame-sparkle {
+  animation: frameSparkleTwinkle 1.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
