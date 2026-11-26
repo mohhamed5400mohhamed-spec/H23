@@ -21,6 +21,7 @@ import {
 } from '../constants/membershipDesigns';
 import { AvatarWithFrame } from './AvatarWithFrame';
 import { analyzeFrameImage } from '../utils/frameAutoFit';
+import { getCachedBgAspect, measureImageAspect } from '../utils/bgDimensionsCache';
 
 export interface MembershipDesignModalProps {
   isOpen: boolean;
@@ -38,9 +39,9 @@ export interface MembershipDesignModalProps {
   catalog?: MembershipDesignCatalog;
   onUploadImage: (file: File) => Promise<string | null>;
   onSaveFrame: (frameValue: string) => void;
-  onSaveBg: (bgValue: string) => void;
+  onSaveBg: (bgValue: string, aspectRatio?: number) => void;
   onAddCatalogFrame?: (name: string, imageUrl: string, applyToSelf: boolean) => void;
-  onAddCatalogBg?: (name: string, imageUrl: string, applyToSelf: boolean) => void;
+  onAddCatalogBg?: (name: string, imageUrl: string, applyToSelf: boolean, aspectRatio?: number) => void;
   onDeleteCatalogFrame?: (id: string) => void;
   onDeleteCatalogBg?: (id: string) => void;
   onRestoreDefaultPresets?: (kind: 'frames' | 'bgs') => void;
@@ -176,14 +177,22 @@ export const MembershipDesignModal: React.FC<MembershipDesignModalProps> = ({
     }
     setIsUploadingBg(true);
     try {
+      const localPreviewUrl = URL.createObjectURL(file);
+      let measuredAspect: number | undefined;
+      try {
+        measuredAspect = await measureImageAspect(localPreviewUrl);
+      } finally {
+        URL.revokeObjectURL(localPreviewUrl);
+      }
       const url = await onUploadImage(file);
       if (url) {
+        const finalAspect = measuredAspect ?? (await measureImageAspect(url));
         if (canManageCatalog && onAddCatalogBg) {
           const derivedName = customBgName.trim() || file.name.replace(/\.[^/.]+$/, '').slice(0, 40);
-          onAddCatalogBg(derivedName, url, applyUploadedToSelf && canUseMemberBg);
+          onAddCatalogBg(derivedName, url, applyUploadedToSelf && canUseMemberBg, finalAspect);
           setCustomBgName('');
         } else if (canUseMemberBg) {
-          onSaveBg(url);
+          onSaveBg(url, finalAspect);
         }
       }
     } finally {
@@ -728,7 +737,7 @@ export const MembershipDesignModal: React.FC<MembershipDesignModalProps> = ({
                           denyBg();
                           return;
                         }
-                        onSaveBg(cb.imageUrl);
+                        onSaveBg(cb.imageUrl, cb.aspectRatio ?? getCachedBgAspect(cb.imageUrl));
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -737,7 +746,7 @@ export const MembershipDesignModal: React.FC<MembershipDesignModalProps> = ({
                             denyBg();
                             return;
                           }
-                          onSaveBg(cb.imageUrl);
+                          onSaveBg(cb.imageUrl, cb.aspectRatio ?? getCachedBgAspect(cb.imageUrl));
                         }
                       }}
                       className={`rounded-xl overflow-hidden border text-right transition-all cursor-pointer grid grid-cols-1 relative ${
@@ -785,7 +794,7 @@ export const MembershipDesignModal: React.FC<MembershipDesignModalProps> = ({
                           denyBg();
                           return;
                         }
-                        onSaveBg(bgPreset.id);
+                        onSaveBg(bgPreset.id, 600 / 180);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -794,7 +803,7 @@ export const MembershipDesignModal: React.FC<MembershipDesignModalProps> = ({
                             denyBg();
                             return;
                           }
-                          onSaveBg(bgPreset.id);
+                          onSaveBg(bgPreset.id, 600 / 180);
                         }
                       }}
                       className={`rounded-xl overflow-hidden border text-right transition-all cursor-pointer grid grid-cols-1 relative ${

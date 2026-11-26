@@ -988,6 +988,7 @@ export interface ConnectedUser {
   nameGradient?: string;
   profileBg?: string;
   memberBg?: string;
+  memberBgAspect?: number;
   theme?: string;
   fontFamily?: string;
   wallpaper?: string;
@@ -3587,8 +3588,15 @@ export interface CustomCatalogBg {
   id: string;
   name: string;
   imageUrl: string;
+  aspectRatio?: number;
   createdBy: string;
   createdAt: number;
+}
+
+function sanitizeBgAspect(value: unknown): number | undefined {
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num) || num <= 0) return undefined;
+  return Number(Math.max(0.25, Math.min(12, num)).toFixed(4));
 }
 
 export interface MembershipDesignCatalog {
@@ -4119,6 +4127,7 @@ export interface RegisteredMemberInfo {
   nameGradient?: string;
   profileBg?: string;
   memberBg?: string;
+  memberBgAspect?: number;
   theme?: string;
   fontFamily?: string;
   wallpaper?: string;
@@ -4331,6 +4340,7 @@ export function getAllRegisteredMembersPayload(
       avatarFrame: onlineUser?.avatarFrame ?? m.avatarFrame ?? '',
       memberBg: onlineUser?.memberBg ?? m.memberBg ?? onlineUser?.profileBg ?? m.profileBg ?? '',
       profileBg: onlineUser?.profileBg ?? m.profileBg ?? m.memberBg ?? '',
+      memberBgAspect: onlineUser?.memberBgAspect ?? m.memberBgAspect,
       likes: m.likes || 0,
       points: m.points || 0,
       honorBadge: m.honorBadge,
@@ -7513,10 +7523,12 @@ io.on('connection', (socket) => {
   // Membership Design Updates (تصميم العضوية: إطار الصورة الشخصية + خلفية العضوية والبروفايل)
   socket.on('updateMembershipDesign', async ({
     avatarFrame,
-    memberBg
+    memberBg,
+    memberBgAspect
   }: {
     avatarFrame?: string;
     memberBg?: string;
+    memberBgAspect?: number;
   }) => {
     const user = users.find((u) => u.id === socket.id);
     if (!user) return;
@@ -7552,12 +7564,15 @@ io.on('connection', (socket) => {
     }
 
     let nextBg: string | undefined = user.memberBg ?? user.profileBg;
+    let nextBgAspect: number | undefined = user.memberBgAspect;
     if (memberBg !== undefined) {
       const trimmedBg = String(memberBg || '').trim();
       if (!trimmedBg) {
         nextBg = undefined;
+        nextBgAspect = undefined;
       } else if (trimmedBg.startsWith('bg:')) {
         nextBg = sanitizeText(trimmedBg).slice(0, 120);
+        nextBgAspect = sanitizeBgAspect(memberBgAspect) ?? Number((600 / 180).toFixed(4));
       } else {
         const persisted = await ensureMediaUrlNotBase64(trimmedBg);
         if (!persisted) {
@@ -7565,9 +7580,12 @@ io.on('connection', (socket) => {
           return;
         }
         nextBg = persisted;
+        const catalogMatch = membershipDesignCatalog.customBgs.find((cb) => cb.imageUrl === persisted);
+        nextBgAspect = sanitizeBgAspect(memberBgAspect) ?? catalogMatch?.aspectRatio;
       }
       user.memberBg = nextBg;
       user.profileBg = nextBg;
+      user.memberBgAspect = nextBgAspect;
     }
 
     const regMember = getRegisteredMember(user.username);
@@ -7576,6 +7594,7 @@ io.on('connection', (socket) => {
       if (memberBg !== undefined) {
         regMember.member.memberBg = nextBg;
         regMember.member.profileBg = nextBg;
+        regMember.member.memberBgAspect = nextBgAspect;
       }
       saveMembers();
     }
@@ -7586,6 +7605,7 @@ io.on('connection', (socket) => {
       if (memberBg !== undefined) {
         sess.user.memberBg = nextBg;
         sess.user.profileBg = nextBg;
+        sess.user.memberBgAspect = nextBgAspect;
       }
       persistActiveSessions();
     }
@@ -7595,7 +7615,8 @@ io.on('connection', (socket) => {
       displayName: user.displayName || user.username,
       avatarFrame: user.avatarFrame || '',
       memberBg: user.memberBg || '',
-      profileBg: user.profileBg || ''
+      profileBg: user.profileBg || '',
+      memberBgAspect: user.memberBgAspect
     });
 
     if (user.room) {
@@ -7694,11 +7715,13 @@ io.on('connection', (socket) => {
   socket.on('addCatalogBg', async ({
     name,
     imageUrl,
-    applyToSelf
+    applyToSelf,
+    aspectRatio
   }: {
     name?: string;
     imageUrl: string;
     applyToSelf?: boolean;
+    aspectRatio?: number;
   }) => {
     const actor = users.find((u) => u.id === socket.id);
     if (!actor || actor.role === 'guest') {
@@ -7718,11 +7741,13 @@ io.on('connection', (socket) => {
       return;
     }
 
+    const safeAspect = sanitizeBgAspect(aspectRatio);
     const cleanName = sanitizeText(name) || `خلفية مخصصة #${membershipDesignCatalog.customBgs.length + 1}`;
     const newItem: CustomCatalogBg = {
       id: `custom-bg:${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       name: cleanName.slice(0, 60),
       imageUrl: persistedUrl,
+      ...(safeAspect !== undefined ? { aspectRatio: safeAspect } : {}),
       createdBy: actor.username,
       createdAt: Date.now()
     };
@@ -7742,23 +7767,27 @@ io.on('connection', (socket) => {
     if (applyToSelf && (isPrivilegedAdmin || hasPermission(actor.role, 'canUseMemberBg'))) {
       actor.memberBg = persistedUrl;
       actor.profileBg = persistedUrl;
+      actor.memberBgAspect = safeAspect;
       const regMember = getRegisteredMember(actor.username);
       if (regMember) {
         regMember.member.memberBg = persistedUrl;
         regMember.member.profileBg = persistedUrl;
+        regMember.member.memberBgAspect = safeAspect;
         saveMembers();
       }
       if (actor.sessionToken && activeSessions.has(actor.sessionToken)) {
         const sess = activeSessions.get(actor.sessionToken)!;
         sess.user.memberBg = persistedUrl;
         sess.user.profileBg = persistedUrl;
+        sess.user.memberBgAspect = safeAspect;
         persistActiveSessions();
       }
       io.emit('userStyleUpdated', {
         username: actor.username,
         displayName: actor.displayName || actor.username,
         memberBg: persistedUrl,
-        profileBg: persistedUrl
+        profileBg: persistedUrl,
+        memberBgAspect: safeAspect
       });
       if (actor.room) broadcastRoomUsers(actor.room);
       broadcastAllUsers();
@@ -7905,6 +7934,7 @@ io.on('connection', (socket) => {
       if (current && valuesToClear.has(current)) {
         u.memberBg = undefined;
         u.profileBg = undefined;
+        u.memberBgAspect = undefined;
         if (u.room) affectedRooms.add(u.room);
         clearedUsernames.add(u.username);
         io.emit('userStyleUpdated', {
@@ -7921,6 +7951,7 @@ io.on('connection', (socket) => {
       if (current && valuesToClear.has(current)) {
         reg.memberBg = undefined;
         reg.profileBg = undefined;
+        reg.memberBgAspect = undefined;
         membersDirty = true;
         const uname = reg.originalUsername || memberKey;
         if (!clearedUsernames.has(uname) && !clearedUsernames.has(memberKey)) {
@@ -7939,6 +7970,7 @@ io.on('connection', (socket) => {
       if (current && valuesToClear.has(current)) {
         sess.user.memberBg = undefined;
         sess.user.profileBg = undefined;
+        sess.user.memberBgAspect = undefined;
         sessionsDirty = true;
       }
     });
@@ -8338,6 +8370,7 @@ io.on('connection', (socket) => {
             nameGradient: member.nameGradient,
             profileBg: member.profileBg || member.memberBg,
             memberBg: member.memberBg || member.profileBg,
+            memberBgAspect: member.memberBgAspect,
             nameBannerUrl: member.nameBannerUrl,
             giftBadges: member.giftBadges || [],
             isGhost: false && canGhost,
@@ -10509,6 +10542,7 @@ io.on('connection', (socket) => {
       nameGradient: (reg as any)?.nameGradient || undefined,
       profileBg: (reg as any)?.profileBg || (reg as any)?.memberBg || undefined,
       memberBg: (reg as any)?.memberBg || (reg as any)?.profileBg || undefined,
+      memberBgAspect: (reg as any)?.memberBgAspect || undefined,
       theme: (reg as any)?.theme || undefined,
       fontFamily: (reg as any)?.fontFamily || undefined,
       wallpaper: (reg as any)?.wallpaper || undefined,

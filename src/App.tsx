@@ -111,6 +111,7 @@ import {
   type MembershipDesignCatalog,
   resolveMemberBgUrl
 } from './constants/membershipDesigns';
+import { seedBgAspect } from './utils/bgDimensionsCache';
 import { RoomBannerCard } from './components/RoomBannerCard';
 import { CustomEmojiPickerPopover } from './components/CustomEmojiPickerPopover';
 import { MembersRosterDrawer } from './components/MembersRosterDrawer';
@@ -766,6 +767,15 @@ export default function App() {
   useEffect(() => {
     setSharedEmblemsConfig(emblemsConfig);
   }, [emblemsConfig]);
+  useEffect(() => {
+    if (membershipDesignCatalog?.customBgs?.length) {
+      for (const bg of membershipDesignCatalog.customBgs) {
+        if (bg.imageUrl && typeof bg.aspectRatio === 'number') {
+          seedBgAspect(bg.imageUrl, bg.aspectRatio);
+        }
+      }
+    }
+  }, [membershipDesignCatalog]);
   const [showBannerPickerModal, setShowBannerPickerModal] = useState<boolean>(false);
   const [bannerPickerTargetUser, setBannerPickerTargetUser] = useState<User | null>(null);
   const [customBannerUrlInput, setCustomBannerUrlInput] = useState<string>('');
@@ -849,6 +859,7 @@ export default function App() {
     avatarUrl?: string;
     avatarFrame?: string;
     memberBg?: string;
+    memberBgAspect?: number;
     profileBg?: string;
     nameBannerUrl?: string;
     giftBadges?: string[];
@@ -4142,8 +4153,17 @@ export default function App() {
     });
 
     // User style immediate broadcast listener
-    s.on('userStyleUpdated', (data: { userId?: string; username: string; displayName?: string; statusQuote?: string; avatarUrl?: string; avatarFrame?: string; memberBg?: string; nameColor?: string; textColor?: string; nameGradient?: string; profileBg?: string; nameBannerUrl?: string; giftBadges?: string[] }) => {
+    s.on('userStyleUpdated', (data: { userId?: string; username: string; displayName?: string; statusQuote?: string; avatarUrl?: string; avatarFrame?: string; memberBg?: string; memberBgAspect?: number; nameColor?: string; textColor?: string; nameGradient?: string; profileBg?: string; nameBannerUrl?: string; giftBadges?: string[] }) => {
       const matchName = (un?: string) => un && un.toLowerCase() === data.username.toLowerCase();
+      const resolvedStyleBgUrl = resolveMemberBgUrl(data.memberBg || data.profileBg);
+      if (resolvedStyleBgUrl && typeof data.memberBgAspect === 'number') {
+        seedBgAspect(resolvedStyleBgUrl, data.memberBgAspect);
+      }
+      const nextAspectFor = (currentAspect?: number) => {
+        if (data.memberBgAspect !== undefined) return data.memberBgAspect;
+        if (data.memberBg === '' || data.profileBg === '') return undefined;
+        return currentAspect;
+      };
 
       setRosterUsers((prev) =>
         prev.map((u) => (matchName(u.username) ? {
@@ -4153,6 +4173,7 @@ export default function App() {
           avatarUrl: data.avatarUrl !== undefined ? data.avatarUrl : u.avatarUrl,
           avatarFrame: data.avatarFrame !== undefined ? data.avatarFrame : u.avatarFrame,
           memberBg: data.memberBg !== undefined ? data.memberBg : u.memberBg,
+          memberBgAspect: nextAspectFor(u.memberBgAspect),
           nameColor: data.nameColor !== undefined ? data.nameColor : u.nameColor,
           textColor: data.textColor !== undefined ? data.textColor : u.textColor,
           nameGradient: data.nameGradient !== undefined ? data.nameGradient : u.nameGradient,
@@ -4169,6 +4190,7 @@ export default function App() {
           avatarUrl: data.avatarUrl !== undefined ? data.avatarUrl : u.avatarUrl,
           avatarFrame: data.avatarFrame !== undefined ? data.avatarFrame : u.avatarFrame,
           memberBg: data.memberBg !== undefined ? data.memberBg : u.memberBg,
+          memberBgAspect: nextAspectFor(u.memberBgAspect),
           nameColor: data.nameColor !== undefined ? data.nameColor : u.nameColor,
           textColor: data.textColor !== undefined ? data.textColor : u.textColor,
           nameGradient: data.nameGradient !== undefined ? data.nameGradient : u.nameGradient,
@@ -4185,6 +4207,7 @@ export default function App() {
           avatarUrl: data.avatarUrl !== undefined ? data.avatarUrl : m.avatarUrl,
           avatarFrame: data.avatarFrame !== undefined ? data.avatarFrame : m.avatarFrame,
           memberBg: data.memberBg !== undefined ? data.memberBg : m.memberBg,
+          memberBgAspect: nextAspectFor(m.memberBgAspect),
           profileBg: data.profileBg !== undefined ? data.profileBg : m.profileBg,
           nameBannerUrl: data.nameBannerUrl !== undefined ? data.nameBannerUrl : m.nameBannerUrl,
           giftBadges: data.giftBadges !== undefined ? data.giftBadges : m.giftBadges
@@ -4197,6 +4220,7 @@ export default function App() {
         avatarUrl: data.avatarUrl !== undefined ? data.avatarUrl : prev.avatarUrl,
         avatarFrame: data.avatarFrame !== undefined ? data.avatarFrame : prev.avatarFrame,
         memberBg: data.memberBg !== undefined ? data.memberBg : prev.memberBg,
+        memberBgAspect: nextAspectFor(prev.memberBgAspect),
         nameColor: data.nameColor !== undefined ? data.nameColor : prev.nameColor,
         textColor: data.textColor !== undefined ? data.textColor : prev.textColor,
         nameGradient: data.nameGradient !== undefined ? data.nameGradient : prev.nameGradient,
@@ -4211,6 +4235,7 @@ export default function App() {
         avatarUrl: data.avatarUrl !== undefined ? data.avatarUrl : prev.avatarUrl,
         avatarFrame: data.avatarFrame !== undefined ? data.avatarFrame : prev.avatarFrame,
         memberBg: data.memberBg !== undefined ? data.memberBg : prev.memberBg,
+        memberBgAspect: nextAspectFor(prev.memberBgAspect),
         profileBg: data.profileBg !== undefined ? data.profileBg : prev.profileBg,
         nameBannerUrl: data.nameBannerUrl !== undefined ? data.nameBannerUrl : prev.nameBannerUrl,
         giftBadges: data.giftBadges !== undefined ? data.giftBadges : prev.giftBadges
@@ -4221,6 +4246,7 @@ export default function App() {
         statusQuote: data.statusQuote !== undefined ? data.statusQuote : prev.statusQuote,
         avatarFrame: data.avatarFrame !== undefined ? data.avatarFrame : prev.avatarFrame,
         memberBg: data.memberBg !== undefined ? data.memberBg : prev.memberBg,
+        memberBgAspect: nextAspectFor(prev.memberBgAspect),
         nameBannerUrl: data.nameBannerUrl !== undefined ? data.nameBannerUrl : prev.nameBannerUrl
       } : prev));
       if (data.displayName !== undefined && matchName(currentUserRef.current?.username)) {
@@ -4449,7 +4475,14 @@ export default function App() {
 
   s.on('allRegisteredMembers', (members: any[]) => {
   // The server snapshot is authoritative for online state and room membership.
-  setAllRegisteredMembers(Array.isArray(members) ? members : []);
+  const list = Array.isArray(members) ? members : [];
+  for (const m of list) {
+    if (m && typeof m.memberBgAspect === 'number') {
+      const url = resolveMemberBgUrl(m.memberBg || m.profileBg);
+      if (url) seedBgAspect(url, m.memberBgAspect);
+    }
+  }
+  setAllRegisteredMembers(list);
   });
 
     // User presence state listener (🟢 Green: online, 🟡 Yellow: away/background, ⚪ Gray: offline)
@@ -7403,6 +7436,7 @@ export default function App() {
         avatarUrl: inReg.avatarUrl,
         avatarFrame: inReg.avatarFrame,
         memberBg: inReg.memberBg,
+        memberBgAspect: inReg.memberBgAspect,
         profileBg: inReg.profileBg,
         nameBannerUrl: inReg.nameBannerUrl,
         statusQuote: inReg.statusQuote || '',
@@ -17151,18 +17185,25 @@ export default function App() {
                   }
                   socket?.emit('updateMembershipDesign', { avatarFrame: frameValue });
                 }}
-                onSaveBg={(bgValue) => {
+                onSaveBg={(bgValue, aspectRatio) => {
                   if (!userCanUseMemberBg) {
                     showToast('ليس لديك صلاحية تغيير خلفية العضوية والبروفايل 🔒', 'error');
                     return;
                   }
-                  socket?.emit('updateMembershipDesign', { memberBg: bgValue });
+                  const resolved = resolveMemberBgUrl(bgValue);
+                  if (resolved && typeof aspectRatio === 'number') {
+                    seedBgAspect(resolved, aspectRatio);
+                  }
+                  socket?.emit('updateMembershipDesign', { memberBg: bgValue, memberBgAspect: aspectRatio });
                 }}
                 onAddCatalogFrame={(name, imageUrl, applyToSelf) => {
                   socket?.emit('addCatalogFrame', { name, imageUrl, applyToSelf });
                 }}
-                onAddCatalogBg={(name, imageUrl, applyToSelf) => {
-                  socket?.emit('addCatalogBg', { name, imageUrl, applyToSelf });
+                onAddCatalogBg={(name, imageUrl, applyToSelf, aspectRatio) => {
+                  if (imageUrl && typeof aspectRatio === 'number') {
+                    seedBgAspect(imageUrl, aspectRatio);
+                  }
+                  socket?.emit('addCatalogBg', { name, imageUrl, applyToSelf, aspectRatio });
                 }}
                 onDeleteCatalogFrame={(id) => {
                   socket?.emit('deleteCatalogFrame', { id });

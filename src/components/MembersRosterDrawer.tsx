@@ -1,9 +1,10 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AtSign, MessageCircle, Mic, Search, ShieldCheck, Users, X } from 'lucide-react';
 import type { User } from '../types/chat';
 import type { ThemeFullStyle } from '../constants/themeStyles';
 import { getThemeLuminance } from '../constants/themeStyles';
 import { resolveMemberBgUrl } from '../constants/membershipDesigns';
+import { getCachedBgAspect, recordBgDimensions } from '../utils/bgDimensionsCache';
 import { AvatarWithFrame } from './AvatarWithFrame';
 
 export interface RegisteredMemberRosterItem {
@@ -16,6 +17,7 @@ export interface RegisteredMemberRosterItem {
   avatarUrl?: string;
   avatarFrame?: string;
   memberBg?: string;
+  memberBgAspect?: number;
   profileBg?: string;
   nameBannerUrl?: string;
   giftBadges?: string[];
@@ -95,12 +97,44 @@ const MemberRowCard = memo<MemberRowCardProps>(({
   onReveal
 }) => {
   const bgUrl = resolveMemberBgUrl(user.memberBg || user.profileBg);
+  const bgImgRef = useRef<HTMLImageElement | null>(null);
+  const [measuredAspect, setMeasuredAspect] = useState<number | undefined>(() =>
+    getCachedBgAspect(bgUrl, user.memberBgAspect)
+  );
+  const [isBgLoaded, setIsBgLoaded] = useState<boolean>(false);
+
+  useLayoutEffect(() => {
+    if (!bgUrl) {
+      setIsBgLoaded(false);
+      setMeasuredAspect(undefined);
+      return;
+    }
+    const cached = getCachedBgAspect(bgUrl, user.memberBgAspect);
+    if (cached !== undefined) {
+      setMeasuredAspect(cached);
+    }
+    const imgEl = bgImgRef.current;
+    if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+      const recorded = recordBgDimensions(bgUrl, imgEl.naturalWidth, imgEl.naturalHeight);
+      if (recorded !== undefined) {
+        setMeasuredAspect(recorded);
+      }
+      setIsBgLoaded(true);
+    } else {
+      setIsBgLoaded(false);
+    }
+  }, [bgUrl, user.memberBgAspect]);
+
   const isOtherOutside = !user.room || user.room === 'خارج الغرف' || user.room.trim() === '';
   const hasActiveMic = !isOffline && (user.isVoice || user.micSlot !== null);
   const cleanStatus = user.statusQuote && user.statusQuote.trim() !== '..' ? user.statusQuote.trim() : '';
 
+  const showImageVisuals = Boolean(bgUrl && isBgLoaded);
+
   const primaryTextClass = bgUrl
-    ? 'text-white drop-shadow-xs'
+    ? showImageVisuals
+      ? 'text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.92),0_0_6px_rgba(0,0,0,0.65)]'
+      : 'text-slate-900'
     : isOffline
     ? isLightDrawer
       ? 'text-slate-700'
@@ -110,13 +144,17 @@ const MemberRowCard = memo<MemberRowCardProps>(({
     : curTheme.accentText;
 
   const secondaryTextClass = bgUrl
-    ? 'text-slate-100/90 drop-shadow-xs'
+    ? showImageVisuals
+      ? 'text-white/95 [text-shadow:0_1px_2px_rgba(0,0,0,0.92),0_0_5px_rgba(0,0,0,0.65)]'
+      : 'text-slate-600'
     : isLightDrawer
     ? 'text-slate-600'
     : 'text-slate-400';
 
   const actionBtnClass = bgUrl
-    ? 'bg-black/65 hover:bg-black/80 text-white border border-white/25'
+    ? showImageVisuals
+      ? 'bg-slate-900/75 hover:bg-slate-900/90 text-white border border-white/30'
+      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
     : isLightDrawer
     ? 'bg-slate-200/85 hover:bg-slate-300 text-slate-800 border border-slate-300/80'
     : 'bg-slate-800/85 hover:bg-slate-700 text-slate-200 border border-slate-700/80';
@@ -204,7 +242,13 @@ const MemberRowCard = memo<MemberRowCardProps>(({
             {hasActiveMic && (
               <span
                 className={`inline-flex items-center gap-0.5 text-[10px] font-bold shrink-0 ${
-                  bgUrl ? 'text-emerald-300' : isLightDrawer ? 'text-emerald-700' : 'text-emerald-400'
+                  bgUrl
+                    ? showImageVisuals
+                      ? 'text-emerald-300 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]'
+                      : 'text-emerald-700'
+                    : isLightDrawer
+                    ? 'text-emerald-700'
+                    : 'text-emerald-400'
                 }`}
                 title="متحدث على المايك"
               >
@@ -213,7 +257,17 @@ const MemberRowCard = memo<MemberRowCardProps>(({
             )}
 
             {isSelf && (
-              <span className={`text-[10px] font-bold shrink-0 ${bgUrl ? 'text-amber-300' : isLightDrawer ? 'text-amber-700' : 'text-amber-400'}`}>
+              <span
+                className={`text-[10px] font-bold shrink-0 ${
+                  bgUrl
+                    ? showImageVisuals
+                      ? 'text-amber-300 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]'
+                      : 'text-amber-700'
+                    : isLightDrawer
+                    ? 'text-amber-700'
+                    : 'text-amber-400'
+                }`}
+              >
                 (أنت)
               </span>
             )}
@@ -227,7 +281,17 @@ const MemberRowCard = memo<MemberRowCardProps>(({
               {user.isGhost && (
                 <>
                   {locationSummary && <span aria-hidden="true">·</span>}
-                  <span className={bgUrl ? 'text-purple-200 font-bold' : isLightDrawer ? 'text-purple-700 font-bold' : 'text-purple-400 font-bold'}>
+                  <span
+                    className={
+                      bgUrl
+                        ? showImageVisuals
+                          ? 'text-purple-200 font-bold [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]'
+                          : 'text-purple-700 font-bold'
+                        : isLightDrawer
+                        ? 'text-purple-700 font-bold'
+                        : 'text-purple-400 font-bold'
+                    }
+                  >
                     مخفي
                   </span>
                 </>
@@ -235,7 +299,17 @@ const MemberRowCard = memo<MemberRowCardProps>(({
               {isIgnored && (
                 <>
                   {(locationSummary || user.isGhost) && <span aria-hidden="true">·</span>}
-                  <span className={bgUrl ? 'text-rose-200 font-bold' : isLightDrawer ? 'text-rose-700 font-bold' : 'text-rose-400 font-bold'}>
+                  <span
+                    className={
+                      bgUrl
+                        ? showImageVisuals
+                          ? 'text-rose-200 font-bold [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]'
+                          : 'text-rose-700 font-bold'
+                        : isLightDrawer
+                        ? 'text-rose-700 font-bold'
+                        : 'text-rose-400 font-bold'
+                    }
+                  >
                     متجاهل
                   </span>
                 </>
@@ -309,7 +383,13 @@ const MemberRowCard = memo<MemberRowCardProps>(({
         {flagNumber && (
           <span
             className={`text-[10px] font-bold tabular-nums mt-0.5 leading-none font-mono ${
-              bgUrl ? 'text-amber-300 drop-shadow-xs' : isLightDrawer ? 'text-amber-700' : 'text-amber-400'
+              bgUrl
+                ? showImageVisuals
+                  ? 'text-amber-300 [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]'
+                  : 'text-amber-700'
+                : isLightDrawer
+                ? 'text-amber-700'
+                : 'text-amber-400'
             }`}
           >
             #{flagNumber}
@@ -331,24 +411,37 @@ const MemberRowCard = memo<MemberRowCardProps>(({
             onSelect(user);
           }
         }}
-        style={{ contain: 'layout style paint' }}
-        className={`relative overflow-hidden cursor-pointer z-0 min-h-[72px] bg-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${
+        style={{
+          aspectRatio: String(measuredAspect ?? 2.2),
+          minHeight: '84px',
+          contain: 'layout style paint'
+        }}
+        className={`relative w-full overflow-hidden cursor-pointer z-0 flex items-start bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${
           isOffline ? 'opacity-90' : ''
         }`}
       >
         <img
+          ref={bgImgRef}
           src={bgUrl}
           alt=""
           aria-hidden="true"
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
-          className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
+          onLoad={(e) => {
+            const imgEl = e.currentTarget;
+            if (imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0) {
+              const aspect = recordBgDimensions(bgUrl, imgEl.naturalWidth, imgEl.naturalHeight);
+              if (aspect !== undefined) {
+                setMeasuredAspect((prev) => (prev === aspect ? prev : aspect));
+              }
+            }
+            setIsBgLoaded(true);
+          }}
+          className={`absolute inset-0 w-full h-full object-cover object-center select-none pointer-events-none transition-opacity duration-300 ease-out ${
+            isBgLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
         />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/55 to-slate-950/30 pointer-events-none"
-        />
-        <div className="relative z-10 w-full px-3.5 py-2.5">
+        <div className="relative z-10 w-full px-3.5 py-2.5 self-start">
           {rowInner}
         </div>
       </div>
@@ -692,6 +785,7 @@ export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = memo(({
                       avatarUrl: m.avatarUrl,
                       avatarFrame: m.avatarFrame,
                       memberBg: m.memberBg,
+                      memberBgAspect: m.memberBgAspect,
                       profileBg: m.profileBg,
                       nameBannerUrl: m.nameBannerUrl,
                       giftBadges: m.giftBadges,

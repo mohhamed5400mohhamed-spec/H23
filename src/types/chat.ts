@@ -128,6 +128,7 @@ export interface User {
   nameGradient?: string;
   profileBg?: string;
   memberBg?: string; // خلفية بطاقة العضو في قائمة الأعضاء والبروفايل
+  memberBgAspect?: number; // نسبة أبعاد خلفية العضو لحجز المساحة قبل التحميل
   theme?: string;
   fontFamily?: string;
   wallpaper?: string;

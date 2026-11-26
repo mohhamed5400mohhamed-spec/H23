@@ -43,6 +43,7 @@ export interface CustomCatalogBg {
   id: string;
   name: string;
   imageUrl: string;
+  aspectRatio?: number;
   createdBy: string;
   createdAt: number;
 }
