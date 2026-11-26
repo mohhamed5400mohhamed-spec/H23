@@ -499,3 +499,19 @@ body.app-booting {
   transform-origin: center;
 }
 
+/* Smooth GPU-composited drawer entrance without opacity flicker */
+@keyframes drawerPanelEnter {
+  0% {
+    transform: translate3d(18px, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.drawer-panel-enter {
+  animation: drawerPanelEnter 150ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform;
+  isolation: isolate;
+}
+

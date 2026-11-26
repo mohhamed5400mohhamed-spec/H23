@@ -8425,19 +8425,19 @@ export default function App() {
             </div>
           </header>
 
-          {/* Banner (Compact banner preserving height for login & online list) */}
-          <div className="relative w-full h-24 sm:h-28 overflow-hidden border-b border-[#2e261d] bg-gradient-to-br from-[#241a12] via-[#362517] to-[#120d09] flex flex-col justify-end p-2.5 text-right shrink-0">
-  {falconChatBanner ? (
-    <img
-      src={falconChatBanner}
-      alt="شات حسان برو"
-      className="absolute inset-0 w-full h-full object-cover"
-      onError={(e) => {
-        (e.currentTarget as HTMLImageElement).src = DEFAULT_FALCON_CHAT_BANNER;
-      }}
-    />
-  ) : null}
-            <div className="relative z-10 bg-gradient-to-t from-black/85 via-black/45 to-transparent -mx-2.5 -mb-2.5 px-2.5 py-2">
+          {/* Banner (Expanded full-view banner preserving full image visibility) */}
+          <div className="relative w-full min-h-[168px] sm:min-h-[196px] overflow-hidden border-b border-[#2e261d] bg-gradient-to-br from-[#241a12] via-[#362517] to-[#120d09] flex items-center justify-center text-right shrink-0">
+            {falconChatBanner ? (
+              <img
+                src={falconChatBanner}
+                alt="شات حسان برو"
+                className="w-full h-auto max-h-64 object-contain block"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = DEFAULT_FALCON_CHAT_BANNER;
+                }}
+              />
+            ) : null}
+            <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-2.5 py-2 pointer-events-none">
               <div className="text-amber-300 font-black text-base drop-shadow-md flex items-center justify-between leading-tight">
                 <span>شات حسان برو 🦅</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-200 font-mono">
@@ -13353,7 +13353,7 @@ export default function App() {
         {activeDrawer !== 'none' && !(activeDrawer === 'pm' && selectedPmUser && pmWindowMode === 'split') && (
           <div
             onClick={() => setActiveDrawer('none')}
-            className="absolute inset-0 bg-black/45 z-30 transition-opacity backdrop-blur-[0.5px] cursor-pointer"
+            className="absolute inset-0 bg-black/50 z-30 cursor-pointer"
             title="انقر هنا لإغلاق النافذة والعودة للشات"
           />
         )}

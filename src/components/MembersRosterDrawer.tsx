@@ -67,10 +67,11 @@ interface MemberRowCardProps {
   flagNumber?: number;
   countryName?: string;
   isIgnored: boolean;
-  onSelect: () => void;
-  onPrivateChat?: () => void;
-  onMention?: () => void;
-  onReveal?: () => void;
+  eager?: boolean;
+  onSelect: (u: User) => void;
+  onPrivateChat?: (u: User) => void;
+  onMention?: (username: string) => void;
+  onReveal?: (username: string) => void;
 }
 
 const MemberRowCard = memo<MemberRowCardProps>(({
@@ -87,6 +88,7 @@ const MemberRowCard = memo<MemberRowCardProps>(({
   flagNumber,
   countryName,
   isIgnored,
+  eager = false,
   onSelect,
   onPrivateChat,
   onMention,
@@ -114,7 +116,7 @@ const MemberRowCard = memo<MemberRowCardProps>(({
     : 'text-slate-400';
 
   const actionBtnClass = bgUrl
-    ? 'bg-black/55 hover:bg-black/75 text-white border border-white/25 backdrop-blur-xs'
+    ? 'bg-black/65 hover:bg-black/80 text-white border border-white/25'
     : isLightDrawer
     ? 'bg-slate-200/85 hover:bg-slate-300 text-slate-800 border border-slate-300/80'
     : 'bg-slate-800/85 hover:bg-slate-700 text-slate-200 border border-slate-700/80';
@@ -153,16 +155,19 @@ const MemberRowCard = memo<MemberRowCardProps>(({
             grayscale={isOffline}
             showPresenceDot
             presenceTitle={presenceTitle}
+            eager={eager}
           />
         </div>
 
         <div className="min-w-0 flex-1 text-right">
-          <div className={`font-bold text-xs ${primaryTextClass} flex items-center gap-1.5 flex-wrap leading-snug`}>
+          <div className={`font-bold text-xs ${primaryTextClass} flex items-center gap-1.5 min-w-0 min-h-[24px] leading-snug overflow-hidden`}>
             {user.giftBadges && user.giftBadges.length > 0 && (
               <img
                 src={user.giftBadges[0]}
                 alt="هدية"
                 title="هدية تكريمية مرافقة للاسم"
+                loading={eager ? 'eager' : 'lazy'}
+                decoding="async"
                 className="w-4 h-4 sm:w-5 sm:h-5 object-contain inline-block drop-shadow-xs shrink-0 select-none align-middle"
               />
             )}
@@ -172,12 +177,14 @@ const MemberRowCard = memo<MemberRowCardProps>(({
                 src={bannerUrl}
                 alt={user.username}
                 title={user.username}
-                className={`${isSameRoom ? 'h-6 max-h-[26px] max-w-full sm:max-w-[220px]' : 'h-5 max-h-[24px] max-w-full sm:max-w-[195px]'} object-contain drop-shadow-xs select-none inline-block align-middle rounded ${
+                loading={eager ? 'eager' : 'lazy'}
+                decoding="async"
+                className={`${isSameRoom ? 'h-6 max-h-[24px] max-w-[165px] sm:max-w-[195px]' : 'h-5 max-h-[22px] max-w-[155px] sm:max-w-[180px]'} object-contain drop-shadow-xs select-none inline-block align-middle rounded shrink min-w-0 ${
                   isOffline ? 'opacity-85' : ''
                 }`}
               />
             ) : (
-              <span className="truncate max-w-full">{displayName}</span>
+              <span className="truncate min-w-0">{displayName}</span>
             )}
 
             {user.giftBadges && user.giftBadges.length > 1 && (
@@ -249,7 +256,7 @@ const MemberRowCard = memo<MemberRowCardProps>(({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onMention();
+                    onMention(user.username);
                   }}
                   className={`h-6 px-2 rounded-md inline-flex items-center gap-1 text-[10px] font-bold transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${actionBtnClass}`}
                   title={`منشن @${user.username}`}
@@ -265,7 +272,7 @@ const MemberRowCard = memo<MemberRowCardProps>(({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onPrivateChat();
+                    onPrivateChat(user);
                   }}
                   className={`h-6 px-2 rounded-md inline-flex items-center gap-1 text-[10px] font-bold transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${actionBtnClass}`}
                   title={`محادثة خاصة مع ${user.username}`}
@@ -281,7 +288,7 @@ const MemberRowCard = memo<MemberRowCardProps>(({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onReveal();
+                    onReveal(user.username);
                   }}
                   className="h-6 px-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] font-black rounded-md transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
                   title="كشف النكات والآي بي"
@@ -317,14 +324,15 @@ const MemberRowCard = memo<MemberRowCardProps>(({
       <div
         role="button"
         tabIndex={0}
-        onClick={onSelect}
+        onClick={() => onSelect(user)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onSelect();
+            onSelect(user);
           }
         }}
-        className={`grid grid-cols-1 overflow-hidden cursor-pointer relative z-0 min-h-[68px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${
+        style={{ contain: 'layout style paint' }}
+        className={`relative overflow-hidden cursor-pointer z-0 min-h-[72px] bg-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${
           isOffline ? 'opacity-90' : ''
         }`}
       >
@@ -332,14 +340,15 @@ const MemberRowCard = memo<MemberRowCardProps>(({
           src={bgUrl}
           alt=""
           aria-hidden="true"
-          className="col-start-1 row-start-1 w-full h-auto max-h-[220px] min-h-full object-cover select-none pointer-events-none"
-          loading="lazy"
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
         />
         <div
           aria-hidden="true"
-          className="col-start-1 row-start-1 bg-gradient-to-b from-slate-950/90 via-slate-950/50 to-slate-950/25 pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/55 to-slate-950/30 pointer-events-none"
         />
-        <div className="col-start-1 row-start-1 relative z-10 self-start w-full px-3.5 pt-3 pb-3">
+        <div className="relative z-10 w-full px-3.5 py-2.5">
           {rowInner}
         </div>
       </div>
@@ -350,13 +359,14 @@ const MemberRowCard = memo<MemberRowCardProps>(({
     <div
       role="button"
       tabIndex={0}
-      onClick={onSelect}
+      onClick={() => onSelect(user)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          onSelect();
+          onSelect(user);
         }
       }}
+      style={{ contain: 'layout style paint' }}
       className={`relative z-0 px-3.5 py-2.5 min-h-[60px] transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${
         isSelf
           ? isLightDrawer
@@ -374,7 +384,7 @@ const MemberRowCard = memo<MemberRowCardProps>(({
 
 MemberRowCard.displayName = 'MemberRowCard';
 
-export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = ({
+export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = memo(({
   onClose,
   currentUser,
   curTheme,
@@ -474,7 +484,7 @@ export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="قائمة الأعضاء"
-      className={`absolute inset-y-0 right-0 z-40 h-full w-[86%] sm:w-[84%] max-w-[390px] ${curTheme.drawerBg} ${headerTextClass} shadow-2xl border-l ${curTheme.cardBorder} flex flex-col min-h-0 overflow-hidden animate-in slide-in-from-right duration-200`}
+      className={`absolute inset-y-0 right-0 z-40 h-full w-[86%] sm:w-[84%] max-w-[390px] ${curTheme.drawerBg} ${headerTextClass} shadow-2xl border-l ${curTheme.cardBorder} flex flex-col min-h-0 overflow-hidden drawer-panel-enter`}
     >
       {/* Header */}
       <div
@@ -594,7 +604,7 @@ export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = ({
                   <span className="tabular-nums shrink-0">{currentRoomUsers.length} متصل</span>
                 </div>
                 <div className={`divide-y ${dividerClass}`}>
-                  {currentRoomUsers.map((u) => {
+                  {currentRoomUsers.map((u, idx) => {
                     const isSelf = u.username.trim().toLowerCase() === myLower;
                     return (
                       <MemberRowCard
@@ -611,10 +621,11 @@ export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = ({
                         flagNumber={getUserFlagNumber(u.username, u.flagNumber)}
                         countryName={getCountryNameFromFlag(u.flag)}
                         isIgnored={isUserIgnored(u.username)}
-                        onSelect={() => onOpenUserProfile(u)}
-                        onPrivateChat={!isSelf ? () => onOpenPrivateChat(u) : undefined}
-                        onMention={!isSelf ? () => onInsertMention(u.username) : undefined}
-                        onReveal={!isSelf && canRevealNicks ? () => onRevealNicks(u.username) : undefined}
+                        eager={idx < 14}
+                        onSelect={onOpenUserProfile}
+                        onPrivateChat={!isSelf ? onOpenPrivateChat : undefined}
+                        onMention={!isSelf ? onInsertMention : undefined}
+                        onReveal={!isSelf && canRevealNicks ? onRevealNicks : undefined}
                       />
                     );
                   })}
@@ -632,7 +643,7 @@ export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = ({
                   <span className="tabular-nums shrink-0">{otherConnectedUsers.length} متصل</span>
                 </div>
                 <div className={`divide-y ${dividerClass}`}>
-                  {otherConnectedUsers.map((u) => {
+                  {otherConnectedUsers.map((u, idx) => {
                     const isSelf = u.username.trim().toLowerCase() === myLower;
                     return (
                       <MemberRowCard
@@ -649,9 +660,10 @@ export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = ({
                         flagNumber={getUserFlagNumber(u.username, u.flagNumber)}
                         countryName={getCountryNameFromFlag(u.flag)}
                         isIgnored={isUserIgnored(u.username)}
-                        onSelect={() => onOpenUserProfile(u)}
-                        onPrivateChat={!isSelf ? () => onOpenPrivateChat(u) : undefined}
-                        onReveal={!isSelf && canRevealNicks ? () => onRevealNicks(u.username) : undefined}
+                        eager={currentRoomUsers.length + idx < 14}
+                        onSelect={onOpenUserProfile}
+                        onPrivateChat={!isSelf ? onOpenPrivateChat : undefined}
+                        onReveal={!isSelf && canRevealNicks ? onRevealNicks : undefined}
                       />
                     );
                   })}
@@ -667,7 +679,7 @@ export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = ({
                   <span className="tabular-nums shrink-0">{offlineMembers.length} عضو</span>
                 </div>
                 <div className={`divide-y ${dividerClass}`}>
-                  {offlineMembers.map((m) => {
+                  {offlineMembers.map((m, idx) => {
                     const simulatedUser: User = {
                       id: `offline-${m.username}`,
                       username: m.username,
@@ -708,9 +720,10 @@ export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = ({
                         flagNumber={getUserFlagNumber(m.username, m.flagNumber)}
                         countryName={getCountryNameFromFlag(m.flag)}
                         isIgnored={isUserIgnored(m.username)}
-                        onSelect={() => onOpenUserProfile(simulatedUser)}
-                        onPrivateChat={() => onOpenPrivateChat(simulatedUser)}
-                        onReveal={canRevealNicks ? () => onRevealNicks(m.username) : undefined}
+                        eager={currentRoomUsers.length + otherConnectedUsers.length + idx < 14}
+                        onSelect={onOpenUserProfile}
+                        onPrivateChat={onOpenPrivateChat}
+                        onReveal={canRevealNicks ? onRevealNicks : undefined}
                       />
                     );
                   })}
@@ -722,4 +735,6 @@ export const MembersRosterDrawer: React.FC<MembersRosterDrawerProps> = ({
       </div>
     </div>
   );
-};
+});
+
+MembersRosterDrawer.displayName = 'MembersRosterDrawer';

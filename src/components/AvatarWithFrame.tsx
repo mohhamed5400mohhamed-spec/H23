@@ -17,6 +17,7 @@ export interface AvatarWithFrameProps {
   grayscale?: boolean;
   showPresenceDot?: boolean;
   presenceTitle?: string;
+  eager?: boolean;
 }
 
 const SIZE_CLASSES: Record<NonNullable<AvatarWithFrameProps['size']>, { box: string; pad: string; dot: string; corner: string }> = {
@@ -39,8 +40,10 @@ export const AvatarWithFrame: React.FC<AvatarWithFrameProps> = React.memo(({
   imgClassName = '',
   grayscale = false,
   showPresenceDot = false,
-  presenceTitle
+  presenceTitle,
+  eager = false
 }) => {
+  const imgLoading = eager ? 'eager' : 'lazy';
   const dim = SIZE_CLASSES[size];
   const optimizedAvatarSrc = optimizeCloudinaryImageUrl(src, { isAvatar: true }) || src;
   const preset = getFramePreset(frame);
@@ -138,7 +141,7 @@ export const AvatarWithFrame: React.FC<AvatarWithFrameProps> = React.memo(({
           <img
             src={optimizedAvatarSrc}
             alt={alt}
-            loading="lazy"
+            loading={imgLoading}
             decoding="async"
             className={`w-full h-full object-cover ${grayscale ? 'grayscale' : ''} ${imgClassName}`}
           />
@@ -178,7 +181,7 @@ export const AvatarWithFrame: React.FC<AvatarWithFrameProps> = React.memo(({
             <img
               src={optimizedAvatarSrc}
               alt={alt}
-              loading="lazy"
+              loading={imgLoading}
               decoding="async"
               className={`w-full h-full object-cover ${grayscale ? 'grayscale' : ''} ${imgClassName}`}
             />
@@ -241,7 +244,7 @@ export const AvatarWithFrame: React.FC<AvatarWithFrameProps> = React.memo(({
               src={customFrameUrl}
               alt="إطار العضوية"
               aria-hidden="true"
-              loading="lazy"
+              loading={imgLoading}
               decoding="async"
               className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
             />
@@ -249,7 +252,7 @@ export const AvatarWithFrame: React.FC<AvatarWithFrameProps> = React.memo(({
               <img
                 src={optimizedAvatarSrc}
                 alt={alt}
-                loading="lazy"
+                loading={imgLoading}
                 decoding="async"
                 className={`w-full h-full object-cover ${grayscale ? 'grayscale' : ''} ${imgClassName}`}
               />
@@ -273,7 +276,7 @@ export const AvatarWithFrame: React.FC<AvatarWithFrameProps> = React.memo(({
           <img
             src={optimizedAvatarSrc}
             alt={alt}
-            loading="lazy"
+            loading={imgLoading}
             decoding="async"
             className={`w-full h-full object-cover ${grayscale ? 'grayscale' : ''} ${imgClassName}`}
           />
@@ -282,7 +285,7 @@ export const AvatarWithFrame: React.FC<AvatarWithFrameProps> = React.memo(({
           src={customFrameUrl}
           alt="إطار العضوية"
           aria-hidden="true"
-          loading="lazy"
+          loading={imgLoading}
           decoding="async"
           className="pointer-events-none select-none absolute left-1/2 top-1/2 z-20 drop-shadow-md max-w-none max-h-none"
           style={{
@@ -302,7 +305,7 @@ export const AvatarWithFrame: React.FC<AvatarWithFrameProps> = React.memo(({
       <img
         src={optimizedAvatarSrc}
         alt={alt}
-        loading="lazy"
+        loading={imgLoading}
         decoding="async"
         className={`w-full h-full ${radiusClass} object-cover border border-amber-500/50 shadow-sm ${grayscale ? 'grayscale' : ''} ${imgClassName}`}
       />
