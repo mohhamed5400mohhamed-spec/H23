@@ -135,10 +135,6 @@ const MemberRowCard = memo<MemberRowCardProps>(({
     ? showImageVisuals
       ? 'text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.92),0_0_6px_rgba(0,0,0,0.65)]'
       : 'text-slate-900'
-    : isOffline
-    ? isLightDrawer
-      ? 'text-slate-700'
-      : 'text-slate-300'
     : isLightDrawer
     ? 'text-slate-900'
     : curTheme.accentText;
@@ -190,7 +186,6 @@ const MemberRowCard = memo<MemberRowCardProps>(({
             size={isSameRoom ? 'md' : 'sm'}
             presenceState={isOffline ? 'offline' : user.presenceState}
             isGhost={user.isGhost}
-            grayscale={isOffline}
             showPresenceDot
             presenceTitle={presenceTitle}
             eager={eager}
@@ -217,9 +212,7 @@ const MemberRowCard = memo<MemberRowCardProps>(({
                 title={user.username}
                 loading={eager ? 'eager' : 'lazy'}
                 decoding="async"
-                className={`${isSameRoom ? 'h-6 max-h-[24px] max-w-[165px] sm:max-w-[195px]' : 'h-5 max-h-[22px] max-w-[155px] sm:max-w-[180px]'} object-contain drop-shadow-xs select-none inline-block align-middle rounded shrink min-w-0 ${
-                  isOffline ? 'opacity-85' : ''
-                }`}
+                className={`${isSameRoom ? 'h-6 max-h-[24px] max-w-[165px] sm:max-w-[195px]' : 'h-5 max-h-[22px] max-w-[155px] sm:max-w-[180px]'} object-contain drop-shadow-xs select-none inline-block align-middle rounded shrink min-w-0`}
               />
             ) : (
               <span className="truncate min-w-0">{displayName}</span>
@@ -416,9 +409,7 @@ const MemberRowCard = memo<MemberRowCardProps>(({
           minHeight: '84px',
           contain: 'layout style paint'
         }}
-        className={`relative w-full overflow-hidden cursor-pointer z-0 flex items-start bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400 ${
-          isOffline ? 'opacity-90' : ''
-        }`}
+        className="relative w-full overflow-hidden cursor-pointer z-0 flex items-start bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-400"
       >
         <img
           ref={bgImgRef}
@@ -468,7 +459,7 @@ const MemberRowCard = memo<MemberRowCardProps>(({
           : isLightDrawer
           ? 'hover:bg-slate-200/60'
           : 'hover:bg-white/5'
-      } ${isOffline ? 'opacity-80' : ''}`}
+      }`}
     >
       {rowInner}
     </div>
